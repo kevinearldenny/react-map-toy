@@ -5,9 +5,8 @@ import pizzaData from "../data/philly_pizza.json";
 
 export default class Map extends React.Component {
   componentDidMount() {
-    console.log(pizzaData);
-    const myMap = L.map("mapid");
-    myMap.setView(
+    this.myMap = L.map("mapid");
+    this.myMap.setView(
       [this.props.location.latitude, this.props.location.longitude],
       13
     );
@@ -18,9 +17,43 @@ export default class Map extends React.Component {
           'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18,
       }
-    ).addTo(myMap);
+    ).addTo(this.myMap);
 
-    const circle = L.circle(
+    const pizzaLayer = L.geoJSON(pizzaData, {
+      onEachFeature: this.pizzaPopup,
+    });
+    pizzaLayer.addTo(this.myMap);
+
+    this.addCurrentLocation();
+
+    this.myMap.on("click", (e) => {
+      // Format to match setLocation function
+      const clickLoc = {
+        coords: {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+        },
+      };
+      this.props.mapClicked(clickLoc);
+    });
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      prevProps.location.latitude !== this.props.location.latitude ||
+      prevProps.location.latitude !== this.location.latitude
+    ) {
+      this.updateCurrentLocation();
+    }
+  }
+
+  updateCurrentLocation() {
+    this.myMap.removeLayer(this.circle);
+    this.addCurrentLocation();
+  }
+
+  addCurrentLocation() {
+    this.circle = L.circle(
       [this.props.location.latitude, this.props.location.longitude],
       {
         color: "blue",
@@ -28,13 +61,15 @@ export default class Map extends React.Component {
         fillOpacity: 0.5,
         radius: 100,
       }
-    ).addTo(myMap);
+    ).addTo(this.myMap);
 
-    circle.bindPopup("Hey, that's me!");
-    const pizzaLayer = L.geoJSON(pizzaData, {
-      onEachFeature: this.pizzaPopup,
-    });
-    pizzaLayer.addTo(myMap);
+    this.circle.bindPopup("Hey, that's me!");
+  }
+
+  pizzaPopup(feature, layer) {
+    if (feature.properties) {
+      layer.bindPopup(feature.properties.Name);
+    }
   }
 
   render() {
@@ -43,13 +78,5 @@ export default class Map extends React.Component {
         <div id="mapid"></div>
       </div>
     );
-  }
-
-  pizzaPopup(feature, layer) {
-    console.log(feature);
-    if (feature.properties) {
-      // const content = '<div><span>' + feature.properties.name + '</span></div>';
-      layer.bindPopup(feature.properties.Name);
-    }
   }
 }
