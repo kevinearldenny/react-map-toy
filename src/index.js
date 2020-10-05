@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import Map from "./components/Map";
+import PizzaMap from "./components/Map";
 
 class Home extends React.Component {
   constructor(props) {
@@ -34,7 +34,7 @@ class Home extends React.Component {
     let mappanel;
     if (this.state.currentLocation.latitude) {
       mappanel = (
-        <Map
+        <PizzaMap
           location={this.state.currentLocation}
           mapClicked={(loc) => this.setLocation(loc)}
         />
